@@ -1,0 +1,5 @@
+grant_type,appid,secret,assert_value
+client_credential,wxf5c8f6ba86d682aa,f074778805f86cb7ff064f926f7eb581,access_token
+,wxf5c8f6ba86d682aa,f074778805f86cb7ff064f926f7eb581,40002
+client_credential,,f074778805f86cb7ff064f926f7eb581,41002
+client_credential,wxf5c8f6ba86d682aa,,41004

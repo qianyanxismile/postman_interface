@@ -1,0 +1,584 @@
+{
+	"info": {
+		"_postman_id": "fd55aea0-6b00-43e9-b1b8-fac9274af591",
+		"name": "微信公众平台接口测试",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "获取接口鉴权token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// console.log(responseBody);",
+							"// //使用json提取器提取access_token",
+							"// //把返回的字符串格式的数据转换成对象的格式",
+							"// var result = JSON.parse(responseBody);",
+							"// console.log(result.access_token);",
+							"// //把access_token设置为全局变量",
+							"// pm.globals.set(\"access_token\", result.access_token);",
+							"",
+							"//使用正则表达式提取access_token,实现接口关联，应用match匹配",
+							"//设置为全局变量",
+							"//判断当返回结果中包含access_token时才通过正则表达式取值",
+							"if(responseBody.search(\"access_token\")!=-1){",
+							"var result = responseBody.match(new RegExp('\"access_token\":\"(.*?)\"'),)",
+							"console.log(result[1]);",
+							"//设置为全局变量",
+							"pm.globals.set(\"access_token\", result[1]);",
+							"}",
+							"",
+							"//断言",
+							"//业务断言",
+							"pm.test(\"检查响应中包括access_token\", function () {",
+							"    pm.expect(pm.response.text()).to.include(data.assert_value);",
+							"});",
+							"//检查响应头中包括有Content-Type响应头",
+							"pm.test(\"Content-Type is present\", function () {",
+							"    pm.response.to.have.header(\"Content-Type\");",
+							"});",
+							"//检查接口响应时间少于200ms",
+							"pm.test(\"Response time is less than 200ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(500);",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://{{ip}}/cgi-bin/token?grant_type={{grant_type}}&appid={{appid}}&secret={{secret}}",
+					"protocol": "https",
+					"host": [
+						"{{ip}}"
+					],
+					"path": [
+						"cgi-bin",
+						"token"
+					],
+					"query": [
+						{
+							"key": "grant_type",
+							"value": "{{grant_type}}"
+						},
+						{
+							"key": "appid",
+							"value": "{{appid}}"
+						},
+						{
+							"key": "secret",
+							"value": "{{secret}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "添加客服账号",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n     \"kf_account\" : \"test1@test\",\n     \"nickname\" : \"客服1\",\n     \"password\" : \"pswmd5\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{ip}}/customservice/kfaccount/add?access_token={{access_token}}",
+					"protocol": "https",
+					"host": [
+						"{{ip}}"
+					],
+					"path": [
+						"customservice",
+						"kfaccount",
+						"add"
+					],
+					"query": [
+						{
+							"key": "access_token",
+							"value": "{{access_token}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "创建分组接口",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"group\":{\"name\":\"test\"}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{ip}}/cgi-bin/groups/create?access_token={{access_token}}",
+					"protocol": "https",
+					"host": [
+						"{{ip}}"
+					],
+					"path": [
+						"cgi-bin",
+						"groups",
+						"create"
+					],
+					"query": [
+						{
+							"key": "access_token",
+							"value": "{{access_token}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "创建标签接口-使用$timestamp时间戳解决参数化问题",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//获取创建的标签ID",
+							"var result = responseBody.match(new RegExp('\"id\":(.*?),'))",
+							"console.log(result)",
+							"var id = result[1]",
+							"//把标签id设置为全局变量",
+							"pm.globals.set(\"tag_id\", id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"tag\": \n{\"name\":\"测试{{$timestamp}}\"}\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{ip}}/cgi-bin/tags/create?access_token={{access_token}}",
+					"protocol": "https",
+					"host": [
+						"{{ip}}"
+					],
+					"path": [
+						"cgi-bin",
+						"tags",
+						"create"
+					],
+					"query": [
+						{
+							"key": "access_token",
+							"value": "{{access_token}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "创建标签接口-设置前置条件自定义动态参数解决参数化问题",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"//手动的获得时间戳",
+							"var time = Date.now();",
+							"//设置为全局变量",
+							"pm.globals.set(\"time\", time);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//获取创建的标签ID",
+							"var result = responseBody.match(new RegExp('\"id\":(.*?),'))",
+							"console.log(result)",
+							"var id = result[1]",
+							"//把标签id设置为全局变量",
+							"pm.globals.set(\"tag_id\", id);",
+							"",
+							"//断言",
+							"//状态码断言",
+							"// pm.test(\"检查返回状态码为200\", function () {",
+							"//     pm.response.to.have.status(200);",
+							"// });",
+							"",
+							"//断言中获取自定义动态参数的方式",
+							"//业务断言 第一种",
+							"pm.test(\"检查响应中包括签名\", function () {",
+							"    pm.expect(pm.response.text()).to.include(\"测试\"+",
+							"   pm.globals.get(\"time\") );",
+							"});",
+							"",
+							"//业务断言 第二种",
+							"pm.test(\"检查响应中包括签名\", function () {",
+							"    pm.expect(pm.response.text()).to.include(\"测试\"+",
+							"   globals.time);",
+							"});",
+							"",
+							"//业务断言 第三种",
+							"pm.test(\"检查响应中包括签名\", function () {",
+							"    pm.expect(pm.response.text()).to.include(\"测试\"+",
+							"   globals['time'])",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"tag\": \n{\"name\":\"测试{{time}}\"}\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{ip}}/cgi-bin/tags/create?access_token={{access_token}}",
+					"protocol": "https",
+					"host": [
+						"{{ip}}"
+					],
+					"path": [
+						"cgi-bin",
+						"tags",
+						"create"
+					],
+					"query": [
+						{
+							"key": "access_token",
+							"value": "{{access_token}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "编辑标签接口",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//断言",
+							"//状态码断言",
+							"// pm.test(\"检查返回状态码为200\", function () {",
+							"//     pm.response.to.have.status(200);",
+							"// });",
+							"",
+							"",
+							"//业务断言 ",
+							"pm.test(\"检查errcode值为0\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.errcode).to.eql(0);",
+							"});",
+							"pm.test(\"检查errmsg值为ok\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.errmsg).to.eql('ok');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{   \"tag\" : {     \"id\" : {{tag_id}},     \"name\" : \"test{{$timestamp}}\"   } } ",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{ip}}/cgi-bin/tags/update?access_token={{access_token}}",
+					"protocol": "https",
+					"host": [
+						"{{ip}}"
+					],
+					"path": [
+						"cgi-bin",
+						"tags",
+						"update"
+					],
+					"query": [
+						{
+							"key": "access_token",
+							"value": "{{access_token}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "获取公众号已创建的标签接口",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//断言",
+							"//状态码断言",
+							"// pm.test(\"检查返回状态码为200\", function () {",
+							"//     pm.response.to.have.status(200);",
+							"// });",
+							"",
+							"",
+							"//业务断言 ",
+							"pm.test(\"检查响应中包括tags\", function () {",
+							"    pm.expect(pm.response.text()).to.include(\"tags\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://{{ip}}/cgi-bin/tags/get?access_token={{access_token}}",
+					"protocol": "https",
+					"host": [
+						"{{ip}}"
+					],
+					"path": [
+						"cgi-bin",
+						"tags",
+						"get"
+					],
+					"query": [
+						{
+							"key": "access_token",
+							"value": "{{access_token}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "删除标签接口",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//断言",
+							"//状态码断言",
+							"// pm.test(\"检查返回状态码为200\", function () {",
+							"//     pm.response.to.have.status(200);",
+							"// });",
+							"",
+							"",
+							"//业务断言 ",
+							"pm.test(\"检查errcode指为0\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.errcode).to.eql(0);",
+							"});",
+							"pm.test(\"检查errmsg值为ok\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.errmsg).to.eql('ok');",
+							"});",
+							"pm.test(\"Body is correct\", function () {",
+							"    pm.response.to.have.body('{\"errcode\":0,\"errmsg\":\"ok\"}');",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{   \"tag\":{        \"id\" : {{tag_id}}   } } ",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{ip}}/cgi-bin/tags/delete?access_token={{access_token}}",
+					"protocol": "https",
+					"host": [
+						"{{ip}}"
+					],
+					"path": [
+						"cgi-bin",
+						"tags",
+						"delete"
+					],
+					"query": [
+						{
+							"key": "access_token",
+							"value": "{{access_token}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "文件上传接口",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//断言",
+							"//状态码断言",
+							"// pm.test(\"检查返回状态码为200\", function () {",
+							"//     pm.response.to.have.status(200);",
+							"// });",
+							"",
+							"",
+							"//业务断言 ",
+							"pm.test(\"检查响应中包括media_id\", function () {",
+							"    pm.expect(pm.response.text()).to.include(\"media_id\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "media",
+							"type": "file",
+							"src": "/Users/wangqianwen/Desktop/面试题.png"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://{{ip}}/cgi-bin/media/upload?access_token={{access_token}}&type=image",
+					"protocol": "https",
+					"host": [
+						"{{ip}}"
+					],
+					"path": [
+						"cgi-bin",
+						"media",
+						"upload"
+					],
+					"query": [
+						{
+							"key": "access_token",
+							"value": "{{access_token}}"
+						},
+						{
+							"key": "type",
+							"value": "image"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "必须带请求头接口测试（百度搜索为例）",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "User-Agent",
+						"value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.109 Safari/537.36",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://www.baidu.com/s?wd=网易云课堂",
+					"protocol": "https",
+					"host": [
+						"www",
+						"baidu",
+						"com"
+					],
+					"path": [
+						"s"
+					],
+					"query": [
+						{
+							"key": "wd",
+							"value": "网易云课堂"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"//全局断言",
+					"//状态码断言",
+					"pm.test(\"检查返回状态码为200\", function () {",
+					"    pm.response.to.have.status(200);",
+					"});"
+				]
+			}
+		}
+	]
+}
